@@ -123,16 +123,17 @@ func (schema *Schema) parseRelation(field *Field) *Relationship {
 }
 
 // User has many Toys, its `Polymorphic` is `Owner`, Pet has one Toy, its `Polymorphic` is `Owner`
-//     type User struct {
-//       Toys []Toy `gorm:"polymorphic:Owner;"`
-//     }
-//     type Pet struct {
-//       Toy Toy `gorm:"polymorphic:Owner;"`
-//     }
-//     type Toy struct {
-//       OwnerID   int
-//       OwnerType string
-//     }
+//
+//	type User struct {
+//	  Toys []Toy `gorm:"polymorphic:Owner;"`
+//	}
+//	type Pet struct {
+//	  Toy Toy `gorm:"polymorphic:Owner;"`
+//	}
+//	type Toy struct {
+//	  OwnerID   int
+//	  OwnerType string
+//	}
 func (schema *Schema) buildPolymorphicRelation(relation *Relationship, field *Field, polymorphic string) {
 	relation.Polymorphic = &Polymorphic{
 		Value:           schema.Table,
@@ -225,7 +226,12 @@ func (schema *Schema) buildMany2ManyRelation(relation *Relationship, field *Fiel
 	}
 
 	for idx, ownField := range ownForeignFields {
-		joinFieldName := strings.Title(schema.Name) + ownField.Name
+		var joinFieldName string
+		if !strings.Contains(ownField.StructField.Tag.Get("gorm"), "column") {
+			joinFieldName = strings.Title(schema.Name) + ownField.Name
+		} else {
+			joinFieldName = ownField.Name
+		}
 		if len(joinForeignKeys) > idx {
 			joinFieldName = strings.Title(joinForeignKeys[idx])
 		}
@@ -242,7 +248,12 @@ func (schema *Schema) buildMany2ManyRelation(relation *Relationship, field *Fiel
 	}
 
 	for idx, relField := range refForeignFields {
-		joinFieldName := strings.Title(relation.FieldSchema.Name) + relField.Name
+		var joinFieldName string
+		if !strings.Contains(relField.StructField.Tag.Get("gorm"), "column") {
+			joinFieldName = strings.Title(relation.FieldSchema.Name) + relField.Name
+		} else {
+			joinFieldName = relField.Name
+		}
 
 		if _, ok := ownFieldsMap[joinFieldName]; ok {
 			if field.Name != relation.FieldSchema.Name {
