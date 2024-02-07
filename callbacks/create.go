@@ -121,7 +121,7 @@ func Create(config *Config) func(db *gorm.DB) {
 
 		insertID, err := result.LastInsertId()
 		insertOk := err == nil && insertID > 0
-		if !insertOk {
+		if !insertOk && err.Error() != "LastInsertId is not supported by this driver" {
 			db.AddError(err)
 			return
 		}
